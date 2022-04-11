@@ -66,6 +66,9 @@ def findSampleIndsWriteColFile(infile, outfile, delimiter="\t"):
             absline.append(line[i])
     newline = newabsline
     line = absline
+    newline = makeCoordCols(newline);
+    newline = makePanUidCol(newline);
+    line = newline
     print(("COL NUM = " + str(len(line))))
     lineToCsv = ",".join(newline)
     outfile.write(lineToCsv)
@@ -74,6 +77,70 @@ def findSampleIndsWriteColFile(infile, outfile, delimiter="\t"):
         if(line[index][0:4] == "TCGA" or line[index][-4:] == ".bed"):
             ret_arr.append(index)
     return ret_arr, repeatanswer
+
+def makeCoordCols(line):
+    coorcolindex = 0;
+    for i in range(len(line)):
+        if(line[i] == "Coordinates"):
+            coorcolindex = i
+            break
+    line[coorcolindex] = "chromosome"
+    line.insert((coorcolindex+1), "coord1")
+    line.insert((coorcolindex+2), "coord2")
+    line.insert((coorcolindex+3), "coord3")
+    line.insert((coorcolindex+4), "coord4")
+    return line
+
+def makePanUidCol(line):
+    line.insert(9, "pancanceruid")
+    return line
+
+def splitCoords4(line, repeatindex):
+    try:
+        line = line.rstrip()
+        line = line.split("\t")
+        wholesplit = line[9].split("|")
+        coord1 = wholesplit[0]
+        coord2 = wholesplit[1]
+        coord1_chrm_split = coord1.split(":")
+        coord1_chrm = coord1_chrm_split[0]
+        coord1_numbers = coord1_chrm_split[1]
+
+        coord1_numbers_split = coord1_numbers.split("-")
+        coord1_numbers_start = coord1_numbers_split[0]
+        coord1_numbers_end = coord1_numbers_split[1]
+
+        coord2_chrm_split = coord2.split(":")
+        coord2_chrm = coord2_chrm_split[0]
+        coord2_numbers = coord2_chrm_split[1]
+
+        coord2_numbers_split = coord2_numbers.split("-")
+        coord2_numbers_start = coord2_numbers_split[0]
+        coord2_numbers_end = coord2_numbers_split[1]
+
+        line[9] = coord1_chrm
+        line.insert(10, coord1_numbers_start)
+        line.insert(11, coord1_numbers_end)
+        line.insert(12, coord2_numbers_start)
+        line.insert(13, coord2_numbers_end)
+        line = "\t".join(line)
+    except:
+        print("Coordsplit failed")
+    return line
+
+def addPanCancerUID(line):
+    try:
+        line = line.rstrip()
+        line = line.split("\t")
+        wholesplit = line[8].split("|")
+        pancanceruid = wholesplit[0]
+        line.insert(9, pancanceruid)
+        line = "\t".join(line)
+    except:
+        print("PanCancerAdd failed")
+        var = traceback.format_exc()
+        print(var)
+    return line
 
 def loopThroughFile(infile, flag, sampleinds="", outfile="", filemaxcol=0, filemincol=0, repeatindex=[]):
     if(flag == "stat"):
@@ -87,7 +154,9 @@ def loopThroughFile(infile, flag, sampleinds="", outfile="", filemaxcol=0, filem
                 ret_val["data1"].append(findRowSplicingStats(line, repeatindex))
             if(flag == "clean"):
                 #print("LINE")
-                corrected_line = fillInRowSplicingValues(line, sampleinds, filemaxcol, filemincol, repeatindex)
+                corrected_line = splitCoords4(line, repeatindex)
+                corrected_line = addPanCancerUID(corrected_line)
+                corrected_line = fillInRowSplicingValues(corrected_line, sampleinds, filemaxcol, filemincol, repeatindex)
                 if(corrected_line != "NAN"):
                     outfile.write(corrected_line)
                     outfile.write("\n")
@@ -98,7 +167,7 @@ def loopThroughFile(infile, flag, sampleinds="", outfile="", filemaxcol=0, filem
     except:
         var = traceback.format_exc()
         #e = sys.exc_info()
-        #print("BREAK", var)
+        print("BREAK", var)
         infile.close()
         return ret_val
 
@@ -119,7 +188,6 @@ def findRowSplicingStats(line, repeatindex):
     return (len(line) - len(repeatindex))
 
 def fillInRowSplicingValues(line, inds, filemaxcol, filemincol, repeatindex):
-    line = line.rstrip()
     line = line.split("\t")
     absline = []
     punkey = line
@@ -136,16 +204,15 @@ def fillInRowSplicingValues(line, inds, filemaxcol, filemincol, repeatindex):
     total_vals = len(line)
     givenvals = []
     #print("STOP2")
-
     #for i in inds:
-        #if(i >= total_vals):
-            #break
-        #if(line[i] != ""):
-            #givenvals.append(float(line[i]))
+    #    if(i >= total_vals):
+    #        break
+    #    if(line[i] != ""):
+    #        givenvals.append(float(line[i]))
     #try:
-    #working_mean = numpy.median(givenvals)
+    #    working_mean = numpy.median(givenvals)
     #except:
-        #print(line, repeatindex, inds, total_vals, punkey)
+    #    return "NAN"
     #working_mean = round(working_mean, 2)
     correct_line = []
     #print("STOP3", inds, filemaxcol)
@@ -159,10 +226,13 @@ def fillInRowSplicingValues(line, inds, filemaxcol, filemincol, repeatindex):
                 correct_line.append("0")
         else:
             try:
-                okl = float(line[i]) #- working_mean
-                okl = round(okl, 2)
-                okl = str(okl)
-                correct_line.append(okl)
+                if(i >= inds[0]):
+                    okl = float(line[i])# - working_mean
+                    okl = round(okl, 2)
+                    okl = str(okl)
+                    correct_line.append(okl)
+                else:
+                    correct_line.append(line[i])
             except:
                 correct_line.append(line[i])
     #print("STOP4")
@@ -197,7 +267,7 @@ def translateMeta(infile, delimiter="\t"):
         return translate_arr
 
 
-def metaSet(infile, outfile, colfile, tdict, delimiter="\t"):
+def metaSet(infile, outfile, colfile, tdict, cname, delimiter="\t"):
     ret_arr = []
 
     line = nxtsplstrpspc(infile, delimiter)
@@ -213,10 +283,7 @@ def metaSet(infile, outfile, colfile, tdict, delimiter="\t"):
     line[0] = "uid"
     for i in range(len(line)):
         if(i != repeat_index):
-            cur_string_examined = line[i];
-            if(cur_string_examined.find("/") != -1):
-                cur_string_examined = cur_string_examined.replace("/", "_")
-            newcolline.append(cur_string_examined)
+            newcolline.append(line[i])
 
     for i in range(len(line)):
         try:
@@ -236,7 +303,13 @@ def metaSet(infile, outfile, colfile, tdict, delimiter="\t"):
                 if(i != repeat_index):
                     try:
                         if(i == 0):
-                            outfile.write(tdict[line[i]])
+                            if(cname == "AML-Leucegene"):
+                                modif = line[i]
+                                if(modif[-4:] == ".bed"):
+                                    modif = modif[0:-4]
+                                outfile.write(tdict[modif])
+                            else:
+                                outfile.write(tdict[line[i]])
                         elif(len(line[i]) == 0):
                             outfile.write("NA")
                         else:
@@ -291,7 +364,10 @@ def extractUID(file):
             if(ecount > 200):
                 return extracted_set
             line = nxtsplstrp(file, "\t")
-            extracted_set.append(line[uid_col_num])
+            panuid = line[uid_col_num]
+            panuid = panuid.split("|")
+            panuid = panuid[0]
+            extracted_set.append(panuid)
             ecount += 1
             count += 1
     except:

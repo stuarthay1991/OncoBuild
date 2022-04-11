@@ -1,6 +1,6 @@
 #Data clean
 
-import preprocessing as prep
+import preprocessingV3 as prep
 prep.moveTo(prep.LAMLdatadir)
 infile = open(prep.objects[1], "r")
 colfile = open((prep.objects[1]+".columns"), "w")

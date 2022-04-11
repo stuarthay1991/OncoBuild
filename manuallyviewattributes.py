@@ -1,6 +1,6 @@
 #View components of large files
 
-import preprocessing as prep
+import preprocessingV3 as prep
 
 prep.moveTo(prep.testingdatadir)
 

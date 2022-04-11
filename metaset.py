@@ -1,5 +1,5 @@
 #makedummymetaquery
-import preprocessingV2 as prep
+import preprocessingV3 as prep
 
 def make(cancer):
 	prep.moveTo(cancer.rootpath)
@@ -8,4 +8,4 @@ def make(cancer):
 	infile = open(cancer.metafile, "r")
 	colfile = open(("ToPostgres/" + "metadata.txt.columns"), "w")
 	outfile = open(("ToPostgres/" + "metadata.txt.pgr.csv"), "w")
-	prep.metaSet(infile, outfile, colfile, translatedict)
+	prep.metaSet(infile, outfile, colfile, translatedict, cancer.name)
