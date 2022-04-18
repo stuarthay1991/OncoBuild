@@ -162,7 +162,10 @@ def loopThroughFile(infile, flag, sampleinds="", outfile="", filemaxcol=0, filem
                     outfile.write("\n")
                 else:
                     #print(corrected_line)
+<<<<<<< HEAD
                     #print("NAN is not a valid value, please reformat")
+=======
+>>>>>>> 6ce566add9a01b5439cb3503208c1232aea57bf6
                     continue
         return ret_val
     except:
@@ -372,4 +375,8 @@ def extractUID(file):
             ecount += 1
             count += 1
     except:
+<<<<<<< HEAD
         return extracted_set
+=======
+        return extracted_set
+>>>>>>> 6ce566add9a01b5439cb3503208c1232aea57bf6

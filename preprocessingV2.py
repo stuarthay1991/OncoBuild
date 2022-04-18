@@ -136,16 +136,17 @@ def fillInRowSplicingValues(line, inds, filemaxcol, filemincol, repeatindex):
     total_vals = len(line)
     givenvals = []
     #print("STOP2")
-    for i in inds:
-        if(i >= total_vals):
-            break
-        if(line[i] != ""):
-            givenvals.append(float(line[i]))
+
+    #for i in inds:
+        #if(i >= total_vals):
+            #break
+        #if(line[i] != ""):
+            #givenvals.append(float(line[i]))
     #try:
-    working_mean = numpy.median(givenvals)
+    #working_mean = numpy.median(givenvals)
     #except:
         #print(line, repeatindex, inds, total_vals, punkey)
-    working_mean = round(working_mean, 2)
+    #working_mean = round(working_mean, 2)
     correct_line = []
     #print("STOP3", inds, filemaxcol)
     for i in range(filemaxcol):
@@ -158,7 +159,7 @@ def fillInRowSplicingValues(line, inds, filemaxcol, filemincol, repeatindex):
                 correct_line.append("0")
         else:
             try:
-                okl = float(line[i]) - working_mean
+                okl = float(line[i]) #- working_mean
                 okl = round(okl, 2)
                 okl = str(okl)
                 correct_line.append(okl)
