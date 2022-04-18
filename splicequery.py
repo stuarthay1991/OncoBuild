@@ -1,6 +1,6 @@
 #make query
 
-import preprocessingV2 as prep
+import preprocessingV3 as prep
 import upload as U
 def makequery(cancer):
 	prep.moveTo(cancer.rootpath)
@@ -38,9 +38,11 @@ def makequery(cancer):
 	queryfile.write("CSV HEADER;")
 	queryobj3 = queryobj3 + "CSV HEADER;"
 	queryobj4 = "CREATE UNIQUE INDEX " + cancer.name.replace("-", "_") + "uidsplice_btree_index ON " + cancer.name.replace("-", "_") + "_SPLICE" + " USING btree(uid);";
+	queryobj5 = "CREATE UNIQUE INDEX " + cancer.name.replace("-", "_") + "panuidsplice_btree_index ON " + cancer.name.replace("-", "_") + "_SPLICE" + " USING btree(pancanceruid);";
 	queryfile.close()
 	querybox.append(queryobj1)
 	querybox.append(queryobj2)
 	querybox.append(queryobj3)
 	querybox.append(queryobj4)
+	querybox.append(queryobj5)
 	U.sync(querybox)
